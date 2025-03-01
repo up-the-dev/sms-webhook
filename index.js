@@ -3,6 +3,7 @@ const axios = require('axios');
 const cors = require('cors');
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
+const cacheHelper = require("./cacheHelper");
 
 const app = express();
 const API_KEY = "sample-api-key-1234#";
@@ -20,7 +21,6 @@ app.use((req, res, next) => {
 app.get('/api/webhook-response', async (req, res) => {
     try {
         const response = await axios.get(
-
             'https://webhook.site/token/5e69efd3-8ab5-465c-8499-2af8a7dbf23f/requests?sorting=newest&per_page=10'
         );
         res.json(response.data);
@@ -33,7 +33,6 @@ app.get('/api/webhook-response', async (req, res) => {
 app.post("/webhook", (req, res) => {
     try {
         const signature = req.headers["x-sg-signature"];
-
         if (!signature) {
             console.error("Signature not found!");
             return res.status(400).send("Signature not found!");
@@ -75,12 +74,37 @@ app.post("/webhook", (req, res) => {
                 return res.status(400).send("Signature doesn't match!");
             }
         }
+
+        // Store request in cache
+        cacheHelper.addRequest({
+            timestamp: new Date(),
+            data: req.body
+        });
+
+
     } catch (error) {
         console.error(error.message);
         return res.status(401).send(error.message);
     }
     return res.status(400).send("Bad Request!");
 });
+
+app.get("/fetch-webhook-requests", (req, res) => {
+    const { mobileNumber, count } = req.query;
+
+    // Convert count to number if provided
+    const limit = count ? parseInt(count, 10) : undefined;
+
+    const requests = cacheHelper.getRequests({ mobileNumber, count: limit });
+
+    res.json(requests);
+});
+
+
+app.delete("/flush-cache", (req, res) => {
+    cacheHelper.flushCache();
+    res.json({ message: "Cache flushed successfully!" });
+})
 
 app.listen(5000, '0.0.0.0', () => {
     console.log(`🚀 Backend running at http://172.16.0.204:5000`);
