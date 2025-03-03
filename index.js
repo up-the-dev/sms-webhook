@@ -1,6 +1,6 @@
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
 const cacheHelper = require("./helpers/cacheHelper");
@@ -9,107 +9,86 @@ const app = express();
 const API_KEY = "1e9be4c77b8d80c5b2d4936e5cffa7350887790c";
 
 app.use(cors());
-// app.use(bodyParser.urlencoded({ extended: false }));
-// app.use(bodyParser.json());
+
+// Middleware to parse raw body
 app.use(bodyParser.text({ type: "*/*" }));
 
-
+// Middleware for logging incoming requests
 app.use((req, res, next) => {
-    console.log("incoming request", req.url, new Date());
+    console.log("Incoming request:", req.method, req.url, new Date());
     next();
-})
-
-app.get('/api/webhook-response', async (req, res) => {
-    try {
-        const response = await axios.get(
-            'https://webhook.site/token/5e69efd3-8ab5-465c-8499-2af8a7dbf23f/requests?sorting=newest&per_page=10'
-        );
-        res.json(response.data);
-    } catch (error) {
-        console.error('Webhook Error:', error.message);
-        res.status(500).json({ error: 'Failed to fetch webhook data' });
-    }
 });
 
-app.post("/webhook", (req, res) => {
+// Signature Verification Middleware
+const verifySignature = (req, res, next) => {
     try {
         const signature = req.headers["x-sg-signature"];
         if (!signature) {
-            console.error("Signature not found!");
-            return res.status(400).send("Signature not found!");
+            console.error("❌ Signature not found!");
+            return res.status(400).json({ error: "Signature not found!" });
         }
 
-        if (req.body.messages) {
-            /* const messagesString = JSON.stringify(req.body.messages);
-            const hash = crypto.createHmac("sha256", API_KEY).update(messagesString).digest("base64");
+        const rawBody = req.body; // Capture raw body
 
-            console.log({
-                hash,
-                signature
-            }) */
-            const rawBody = req.body; // Get raw body as string
+        // Generate hash using HMAC SHA256
+        const hash = crypto.createHmac("sha256", API_KEY)
+            .update(rawBody)
+            .digest("base64");
 
-            const hash = crypto.createHmac("sha256", API_KEY)
-                .update(rawBody) // Use raw body instead of JSON.stringify
-                .digest("base64");
+        console.log({ expectedHash: hash, receivedSignature: signature });
 
-            console.log({ hash, signature });
-            if (hash === signature) {
-                const messages = req.body.messages;
-                console.log("signature matches")
-                messages.forEach((message) => {
-                    console.log("Received Message:", message);
-
-                    if (message.message.toLowerCase() === "hi") {
-                        console.log("Replying to: ", message.number);
-                        // You can add API call here to send an automated response.
-                    }
-                });
-
-                return res.status(200).send("Webhook received successfully!");
-                // } else {
-                //     throw new Error("Signature doesn't match!");
-                // }
-            }
-
-        } else if (req.body.ussdRequest) {
-            const ussdString = JSON.stringify(req.body.ussdRequest);
-            const hash = crypto.createHmac("sha256", API_KEY).update(ussdString).digest("base64");
-
-            console.log({
-                hash,
-                signature
-            })
-            if (hash === signature) {
-                const { deviceID, simSlot, request, response } = req.body.ussdRequest;
-                console.log(`Received USSD Request from device ${deviceID}, SIM Slot: ${simSlot}`);
-                console.log(`Request: ${request}, Response: ${response}`);
-
-                return res.status(200).send("USSD request processed!");
-            } else {
-                // throw new Error("Signature doesn't match!");
-                return res.status(400).send("Signature doesn't match!");
-            }
+        if (hash !== signature) {
+            console.error("❌ Signature mismatch!");
+            return res.status(400).json({ error: "Signature doesn't match!" });
         }
 
-        // Store request in cache
-        cacheHelper.addRequest({
-            timestamp: new Date(),
-            data: req.body
-        });
-
-
+        console.log("✅ Signature verified successfully.");
+        next(); // Move to the next middleware if verification is successful
     } catch (error) {
-        console.error(error.message);
-        return res.status(401).send(error.message);
+        console.error("❌ Error verifying signature:", error.message);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
-    return res.status(400).send("Bad Request!");
+};
+
+// Webhook Endpoint (Protected by Signature Verification)
+app.post("/webhook", verifySignature, (req, res) => {
+    try {
+        const parsedData = JSON.parse(req.body); // Parse raw JSON string
+
+        if (parsedData.messages) {
+            const messages = parsedData.messages;
+            messages.forEach((message) => {
+                console.log("📩 Received Message:", message);
+
+                if (message.message.toLowerCase() === "hi") {
+                    console.log("🤖 Replying to:", message.number);
+                    // Implement reply logic here
+                }
+            });
+
+            // Store request in cache
+            cacheHelper.addRequest({
+                timestamp: new Date(),
+                data: parsedData,
+            });
+
+            return res.status(200).json({ message: "Webhook received successfully!" });
+        } else if (parsedData.ussdRequest) {
+            const { deviceID, simSlot, request, response } = parsedData.ussdRequest;
+            console.log(`📡 USSD Request from device ${deviceID}, SIM Slot: ${simSlot}`);
+            console.log(`📝 Request: ${request}, Response: ${response}`);
+
+            return res.status(200).json({ message: "USSD request processed!" });
+        }
+    } catch (error) {
+        console.error("❌ Error processing webhook:", error.message);
+        return res.status(400).json({ error: "Bad Request!" });
+    }
 });
 
+// Endpoint to Fetch Webhook Requests from Cache
 app.get("/fetch-webhook-requests", (req, res) => {
     const { mobileNumber, count } = req.query;
-
-    // Convert count to number if provided
     const limit = count ? parseInt(count, 10) : undefined;
 
     const requests = cacheHelper.getRequests({ mobileNumber, count: limit });
@@ -117,12 +96,13 @@ app.get("/fetch-webhook-requests", (req, res) => {
     res.json(requests);
 });
 
-
+// Endpoint to Flush Cache
 app.delete("/flush-cache", (req, res) => {
     cacheHelper.flushCache();
-    res.json({ message: "Cache flushed successfully!" });
-})
+    res.json({ message: "🧹 Cache flushed successfully!" });
+});
 
-app.listen(5000, '0.0.0.0', () => {
+// Start Server
+app.listen(5000, "0.0.0.0", () => {
     console.log(`🚀 Backend running at http://172.16.0.204:5000`);
 });
