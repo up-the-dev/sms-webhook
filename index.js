@@ -9,8 +9,9 @@ const app = express();
 const API_KEY = "1e9be4c77b8d80c5b2d4936e5cffa7350887790c";
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+app.use(bodyParser.text({ type: "*/*" }));
 
 
 app.use((req, res, next) => {
@@ -39,16 +40,23 @@ app.post("/webhook", (req, res) => {
         }
 
         if (req.body.messages) {
-            const messagesString = JSON.stringify(req.body.messages);
+            /* const messagesString = JSON.stringify(req.body.messages);
             const hash = crypto.createHmac("sha256", API_KEY).update(messagesString).digest("base64");
 
             console.log({
                 hash,
                 signature
-            })
+            }) */
+            const rawBody = req.body; // Get raw body as string
+
+            const hash = crypto.createHmac("sha256", API_KEY)
+                .update(rawBody) // Use raw body instead of JSON.stringify
+                .digest("base64");
+
+            console.log({ hash, signature });
             if (hash === signature) {
                 const messages = req.body.messages;
-
+                console.log("signature matches")
                 messages.forEach((message) => {
                     console.log("Received Message:", message);
 
