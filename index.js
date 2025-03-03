@@ -42,27 +42,36 @@ app.post("/webhook", (req, res) => {
             const messagesString = JSON.stringify(req.body.messages);
             const hash = crypto.createHmac("sha256", API_KEY).update(messagesString).digest("base64");
 
-            console.error(req.body)
-            // if (hash === signature) {
-            const messages = req.body.messages;
+            console.log({
+                hash,
+                signature
+            })
+            if (hash === signature) {
+                const messages = req.body.messages;
 
-            messages.forEach((message) => {
-                console.log("Received Message:", message);
+                messages.forEach((message) => {
+                    console.log("Received Message:", message);
 
-                if (message.message.toLowerCase() === "hi") {
-                    console.log("Replying to: ", message.number);
-                    // You can add API call here to send an automated response.
-                }
-            });
+                    if (message.message.toLowerCase() === "hi") {
+                        console.log("Replying to: ", message.number);
+                        // You can add API call here to send an automated response.
+                    }
+                });
 
-            return res.status(200).send("Webhook received successfully!");
-            // } else {
-            //     throw new Error("Signature doesn't match!");
-            // }
+                return res.status(200).send("Webhook received successfully!");
+                // } else {
+                //     throw new Error("Signature doesn't match!");
+                // }
+            }
+
         } else if (req.body.ussdRequest) {
             const ussdString = JSON.stringify(req.body.ussdRequest);
             const hash = crypto.createHmac("sha256", API_KEY).update(ussdString).digest("base64");
 
+            console.log({
+                hash,
+                signature
+            })
             if (hash === signature) {
                 const { deviceID, simSlot, request, response } = req.body.ussdRequest;
                 console.log(`Received USSD Request from device ${deviceID}, SIM Slot: ${simSlot}`);
