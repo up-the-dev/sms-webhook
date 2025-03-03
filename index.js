@@ -10,8 +10,8 @@ const API_KEY = "1e9be4c77b8d80c5b2d4936e5cffa7350887790c";
 
 app.use(cors());
 
-// Middleware to parse raw body
-app.use(bodyParser.text({ type: "*/*" }));
+// Use express.raw() to capture the exact raw body for signature verification
+app.use(express.raw({ type: "*/*" }));
 
 // Middleware for logging incoming requests
 app.use((req, res, next) => {
@@ -32,7 +32,7 @@ const verifySignature = (req, res, next) => {
 
         // Generate hash using HMAC SHA256
         const hash = crypto.createHmac("sha256", API_KEY)
-            .update(rawBody)
+            .update(rawBody, "utf-8")
             .digest("base64");
 
         console.log({ expectedHash: hash, receivedSignature: signature });
