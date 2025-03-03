@@ -28,22 +28,43 @@ const verifySignature = (req, res, next) => {
             return res.status(400).json({ error: "Signature not found!" });
         }
 
-        const rawBody = req.body; // Capture raw body
+        const rawBody = req.body.toString(); // Full raw request body
+        let bodyJson;
+        try {
+            bodyJson = JSON.parse(rawBody);
+        } catch (err) {
+            console.error("❌ Invalid JSON body!");
+            return res.status(400).json({ error: "Invalid JSON body!" });
+        }
 
-        // Generate hash using HMAC SHA256
-        const hash = crypto.createHmac("sha256", API_KEY)
-            .update(rawBody, "utf-8")
+        // Extract the field to hash (like PHP code does)
+        let dataToHash = "";
+        if (bodyJson.messages) {
+            dataToHash = JSON.stringify(bodyJson.messages);
+        } else if (bodyJson.ussdRequest) {
+            dataToHash = JSON.stringify(bodyJson.ussdRequest);
+        } else {
+            return res.status(400).json({ error: "Invalid request format!" });
+        }
+
+        // Compute HMAC SHA256
+        const computedHash = crypto.createHmac("sha256", API_KEY)
+            .update(dataToHash, "utf8") // Match PHP behavior
             .digest("base64");
 
-        console.log({ expectedHash: hash, receivedSignature: signature });
+        console.log("\nIncoming Webhook Verification:");
+        console.log("🔹 Data to Hash:", dataToHash);
+        console.log("🔹 Computed Hash:", computedHash);
+        console.log("🔹 Received Signature:", signature);
 
-        if (hash !== signature) {
+        if (computedHash !== signature) {
             console.error("❌ Signature mismatch!");
             return res.status(400).json({ error: "Signature doesn't match!" });
         }
 
         console.log("✅ Signature verified successfully.");
-        next(); // Move to the next middleware if verification is successful
+        req.parsedBody = bodyJson; // Store parsed JSON for next middleware
+        next();
     } catch (error) {
         console.error("❌ Error verifying signature:", error.message);
         return res.status(500).json({ error: "Internal Server Error" });
