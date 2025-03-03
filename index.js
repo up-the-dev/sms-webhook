@@ -3,10 +3,10 @@ const axios = require('axios');
 const cors = require('cors');
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
-const cacheHelper = require("./cacheHelper");
+const cacheHelper = require("./helpers/cacheHelper");
 
 const app = express();
-const API_KEY = "sample-api-key-1234#";
+const API_KEY = "1e9be4c77b8d80c5b2d4936e5cffa7350887790c";
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
