@@ -93,12 +93,12 @@ app.post("/webhook", (req, res) => {
             const messagesString = JSON.stringify(req.body.messages);
             const hash = crypto.createHmac("sha256", API_KEY).update(messagesString).digest("base64");
 
-            console.log({
-                hash,
-                signature
-            })
+            // console.log({
+            //     hash,
+            //     signature
+            // })
 
-            console.log("Received Message:", req.body);
+            // console.log("Received Message:", req.body);
 
             // Store request in cache
             cacheHelper.addRequest({
@@ -127,7 +127,7 @@ app.get("/fetch-webhook-requests", (req, res) => {
     const mobileNumber = req.query.mobileNumber ? req.query.mobileNumber.replace(/ /g, "+") : null;
     const count = req.query.count ? parseInt(req.query.count, 10) : null;
 
-    console.log('query:', { mobileNumber, count })
+    // console.log('query:', { mobileNumber, count })
     const limit = count ? parseInt(count, 10) : undefined;
 
     const requests = cacheHelper.getRequests({ mobileNumber, count: limit });

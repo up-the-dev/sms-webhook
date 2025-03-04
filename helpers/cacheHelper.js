@@ -14,11 +14,11 @@ class CacheHelper {
     // Get requests based on filters (mobileNumber & count)
     getRequests({ mobileNumber, count }) {
         const keys = this.cache.keys();
-        console.log("Cache Keys:", keys);
+        // console.log("Cache Keys:", keys);
 
         const allRequests = keys.map(key => {
             const data = this.cache.get(key);
-            console.log(`Key: ${key}, Data:`, JSON.stringify(data, null, 2));
+            // console.log(`Key: ${key}, Data:`, JSON.stringify(data, null, 2));
 
             // 🔥 Fix: Parse 'messages' if it's a string
             if (typeof data.data.messages === "string") {
@@ -33,7 +33,7 @@ class CacheHelper {
             return data;
         }).filter(req => req); // Remove null/undefined entries
 
-        console.log("All Requests:", JSON.stringify(allRequests, null, 2));
+        // console.log("All Requests:", JSON.stringify(allRequests, null, 2));
 
         // 🔍 Filter by mobile number if provided
         let filteredRequests = allRequests;
@@ -43,9 +43,9 @@ class CacheHelper {
                 if (Array.isArray(req.data.messages)) {
                     console.log("it is array of number");
                     return req.data.messages.some(msg => {
-                        console.log("msg.number:", msg.number);
-                        console.log("mobileNumber:", mobileNumber);
-                        console.log("mobileNumber==msg.number", mobileNumber == msg.number);
+                        // console.log("msg.number:", msg.number);
+                        // console.log("mobileNumber:", mobileNumber);
+                        // console.log("mobileNumber==msg.number", mobileNumber == msg.number);
                         return msg.number == mobileNumber
                     });
                 }
@@ -58,7 +58,7 @@ class CacheHelper {
             filteredRequests = filteredRequests.slice(-count);
         }
 
-        console.log("Filtered Requests:", JSON.stringify(filteredRequests, null, 2));
+        // console.log("Filtered Requests:", JSON.stringify(filteredRequests, null, 2));
         return filteredRequests;
     }
 
