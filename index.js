@@ -118,7 +118,9 @@ app.post("/webhook", (req, res) => {
 
 // Endpoint to Fetch Webhook Requests from Cache
 app.get("/fetch-webhook-requests", (req, res) => {
-    const { mobileNumber, count } = req.query;
+    const mobileNumber = req.query.mobileNumber ? req.query.mobileNumber.replace(/ /g, "+") : null;
+    const count = req.query.count ? parseInt(req.query.count, 10) : null;
+
     console.log('query:', { mobileNumber, count })
     const limit = count ? parseInt(count, 10) : undefined;
 
