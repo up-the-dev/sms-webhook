@@ -8,7 +8,13 @@ const cacheHelper = require("./helpers/cacheHelper");
 const app = express();
 const API_KEY = "1e9be4c77b8d80c5b2d4936e5cffa7350887790c";
 
-app.use(cors());
+app.use(
+    cors({
+        origin: "*", // Allow all origins
+        methods: "GET,POST,PUT,DELETE",
+        allowedHeaders: "Content-Type,Authorization",
+    })
+);
 
 
 // app.use(express.raw({ type: "*/*" }));
