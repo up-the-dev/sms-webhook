@@ -91,17 +91,6 @@ app.post("/webhook", (req, res) => {
                 hash,
                 signature
             })
-            // if (hash === signature) {
-            const messages = req.body.messages;
-
-            messages.forEach((message) => {
-                console.log("Received Message:", message);
-
-                if (message.message.toLowerCase() === "hi") {
-                    console.log("Replying to: ", message.number);
-                    // You can add API call here to send an automated response.
-                }
-            });
 
             console.log("Received Message:", req.body);
 
