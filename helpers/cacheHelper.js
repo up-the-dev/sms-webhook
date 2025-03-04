@@ -19,23 +19,34 @@ class CacheHelper {
         const allRequests = keys.map(key => {
             const data = this.cache.get(key);
             console.log(`Key: ${key}, Data:`, JSON.stringify(data, null, 2));
+
+            // 🔥 Fix: Parse 'messages' if it's a string
+            if (typeof data.data.messages === "string") {
+                try {
+                    data.data.messages = JSON.parse(data.data.messages);
+                } catch (error) {
+                    console.error("Error parsing messages:", error);
+                    return null;
+                }
+            }
+
             return data;
         }).filter(req => req); // Remove null/undefined entries
 
         console.log("All Requests:", JSON.stringify(allRequests, null, 2));
 
-        // 🔥 Fix: Extract numbers from `messages` array
+        // 🔍 Filter by mobile number if provided
         let filteredRequests = allRequests;
         if (mobileNumber) {
             filteredRequests = filteredRequests.filter(req => {
-                if (req.data.messages && req.data.messages.length > 0) {
+                if (Array.isArray(req.data.messages)) {
                     return req.data.messages.some(msg => msg.number === mobileNumber);
                 }
                 return false;
             });
         }
 
-        // Limit the count if provided
+        // 🔍 Limit the count if provided
         if (count) {
             filteredRequests = filteredRequests.slice(-count);
         }
@@ -43,6 +54,7 @@ class CacheHelper {
         console.log("Filtered Requests:", JSON.stringify(filteredRequests, null, 2));
         return filteredRequests;
     }
+
 
 
 
