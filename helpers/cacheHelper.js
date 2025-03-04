@@ -39,9 +39,9 @@ class CacheHelper {
         let filteredRequests = allRequests;
         if (mobileNumber) {
             filteredRequests = filteredRequests.filter(req => {
-                console.log("going to chech if arrat Req Data:", req.data);
+                // console.log("going to chech if arrat Req Data:", req.data);
                 if (Array.isArray(req.data.messages)) {
-                    console.log("it is array of number");
+                    // console.log("it is array of number");
                     return req.data.messages.some(msg => {
                         // console.log("msg.number:", msg.number);
                         // console.log("mobileNumber:", mobileNumber);
