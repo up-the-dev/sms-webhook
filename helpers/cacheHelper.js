@@ -45,7 +45,8 @@ class CacheHelper {
                     return req.data.messages.some(msg => {
                         console.log("msg.number:", msg.number);
                         console.log("mobileNumber:", mobileNumber);
-                        msg.number === mobileNumber
+                        console.log("mobileNumber==msg.number", mobileNumber == msg.number);
+                        return msg.number == mobileNumber
                     });
                 }
                 return false;
