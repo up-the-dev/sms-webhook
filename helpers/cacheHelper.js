@@ -13,21 +13,38 @@ class CacheHelper {
 
     // Get requests based on filters (mobileNumber & count)
     getRequests({ mobileNumber, count }) {
-        const allRequests = this.cache.keys().map(key => this.cache.get(key)).filter(req => req); // Fetch all valid requests
+        const keys = this.cache.keys();
+        console.log("Cache Keys:", keys);
 
-        // Filter by mobile number if provided
+        const allRequests = keys.map(key => {
+            const data = this.cache.get(key);
+            console.log(`Key: ${key}, Data:`, JSON.stringify(data, null, 2));
+            return data;
+        }).filter(req => req); // Remove null/undefined entries
+
+        console.log("All Requests:", JSON.stringify(allRequests, null, 2));
+
+        // 🔥 Fix: Extract numbers from `messages` array
         let filteredRequests = allRequests;
         if (mobileNumber) {
-            filteredRequests = filteredRequests.filter(req => req.data.number === mobileNumber);
+            filteredRequests = filteredRequests.filter(req => {
+                if (req.data.messages && req.data.messages.length > 0) {
+                    return req.data.messages.some(msg => msg.number === mobileNumber);
+                }
+                return false;
+            });
         }
 
         // Limit the count if provided
         if (count) {
-            filteredRequests = filteredRequests.slice(-count); // Get latest 'count' records
+            filteredRequests = filteredRequests.slice(-count);
         }
 
+        console.log("Filtered Requests:", JSON.stringify(filteredRequests, null, 2));
         return filteredRequests;
     }
+
+
 
     // Flush all cached data
     flushCache() {

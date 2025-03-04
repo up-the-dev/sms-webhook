@@ -10,8 +10,11 @@ const API_KEY = "1e9be4c77b8d80c5b2d4936e5cffa7350887790c";
 
 app.use(cors());
 
-// Use express.raw() to capture the exact raw body for signature verification
-app.use(express.raw({ type: "*/*" }));
+
+// app.use(express.raw({ type: "*/*" }));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware for logging incoming requests
 app.use((req, res, next) => {
@@ -72,40 +75,57 @@ const verifySignature = (req, res, next) => {
 };
 
 // Webhook Endpoint (Protected by Signature Verification)
-app.post("/webhook", verifySignature, (req, res) => {
+app.post("/webhook", (req, res) => {
     try {
-        const parsedData = JSON.parse(req.body); // Parse raw JSON string
+        const signature = req.headers["x-sg-signature"];
+        if (!signature) {
+            console.error("Signature not found!");
+            return res.status(400).send("Signature not found!");
+        }
 
-        if (parsedData.messages) {
-            const messages = parsedData.messages;
+        if (req.body.messages) {
+            const messagesString = JSON.stringify(req.body.messages);
+            const hash = crypto.createHmac("sha256", API_KEY).update(messagesString).digest("base64");
+
+            console.log({
+                hash,
+                signature
+            })
+            // if (hash === signature) {
+            const messages = req.body.messages;
+
             messages.forEach((message) => {
-                console.log("📩 Received Message:", message);
+                console.log("Received Message:", message);
 
                 if (message.message.toLowerCase() === "hi") {
-                    console.log("🤖 Replying to:", message.number);
-                    // Implement reply logic here
+                    console.log("Replying to: ", message.number);
+                    // You can add API call here to send an automated response.
                 }
             });
+
+            console.log("Received Message:", req.body);
 
             // Store request in cache
             cacheHelper.addRequest({
                 timestamp: new Date(),
-                data: parsedData,
+                data: req.body
             });
 
-            return res.status(200).json({ message: "Webhook received successfully!" });
-        } else if (parsedData.ussdRequest) {
-            const { deviceID, simSlot, request, response } = parsedData.ussdRequest;
-            console.log(`📡 USSD Request from device ${deviceID}, SIM Slot: ${simSlot}`);
-            console.log(`📝 Request: ${request}, Response: ${response}`);
 
-            return res.status(200).json({ message: "USSD request processed!" });
+            return res.status(200).send("Webhook received successfully!");
+            // } else {
+            //     throw new Error("Signature doesn't match!");
+            // }
+            // }
+
         }
     } catch (error) {
-        console.error("❌ Error processing webhook:", error.message);
-        return res.status(400).json({ error: "Bad Request!" });
+        console.error(error.message);
+        return res.status(401).send(error.message);
     }
+    return res.status(400).send("Bad Request!");
 });
+
 
 // Endpoint to Fetch Webhook Requests from Cache
 app.get("/fetch-webhook-requests", (req, res) => {
