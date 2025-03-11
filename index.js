@@ -130,7 +130,7 @@ app.get("/fetch-webhook-requests", (req, res) => {
     // console.log('query:', { mobileNumber, count })
     const limit = count ? parseInt(count, 10) : undefined;
 
-    const requests = cacheHelper.getRequests({ mobileNumber, count: limit }).sort((a, b) => a.timestamp - b.timestamp);
+    const requests = cacheHelper.getRequests({ mobileNumber, count: limit }).sort((a, b) => b.timestamp - a.timestamp);
 
     res.json(requests);
 });
