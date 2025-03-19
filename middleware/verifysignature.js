@@ -1,19 +1,9 @@
 const crypto = require("crypto");
-
 const API_KEY = "0d08f8225fb0b7a86d939a1d59fbd561fe8156ca";
 
 // Middleware for signature verification
 const verifySignatureMiddleware = (req, res, next) => {
     const signature = req.headers["x-sg-signature"];
-
-    // Log incoming request details
-    console.log("Incoming request:", {
-        method: req.method,
-        url: req.url,
-        headers: req.headers,
-        body: req.body,
-        timestamp: new Date().toISOString(),
-    });
 
     if (!signature) {
         console.error("Signature not found in headers!");
@@ -39,8 +29,8 @@ const verifySignatureMiddleware = (req, res, next) => {
         .update(payload) // Use the raw stringified JSON
         .digest("base64");
 
-    console.log("Generated signature:", hash);
-    console.log("Received signature:", signature);
+    /*   console.log("Generated signature:", hash);
+      console.log("Received signature:", signature); */
 
     if (hash !== signature) {
         console.error("Signature verification failed!", {
@@ -51,11 +41,11 @@ const verifySignatureMiddleware = (req, res, next) => {
     }
 
     // Log successful signature verification
-    console.log("Signature verified successfully!", {
-        payload: payload,
-        signature: signature,
-        timestamp: new Date().toISOString(),
-    });
+    /*    console.log("Signature verified successfully!", {
+           payload: payload,
+           signature: signature,
+           timestamp: new Date().toISOString(),
+       }); */
 
     // Proceed to the next middleware or route handler
     next();

@@ -19,7 +19,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Middleware for logging incoming requests
 app.use((req, res, next) => {
-    console.log("Incoming request:", req.method, req.url, new Date());
+    console.log("Incoming request:", {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+        body: req.body,
+        timestamp: new Date().toISOString(),
+    });
     next();
 });
 
