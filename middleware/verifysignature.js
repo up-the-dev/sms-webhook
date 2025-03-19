@@ -23,8 +23,10 @@ const verifySignatureMiddleware = (req, res, next) => {
     // Determine the payload to verify based on the request body
     let payload;
     if (req.body.messages) {
+        // Use the raw stringified JSON for signature verification
         payload = req.body.messages;
     } else if (req.body.ussdRequest) {
+        // Use the raw stringified JSON for signature verification
         payload = req.body.ussdRequest;
     } else {
         console.error("Invalid request body: neither 'messages' nor 'ussdRequest' found.");
@@ -34,8 +36,11 @@ const verifySignatureMiddleware = (req, res, next) => {
     // Verify the signature
     const hash = crypto
         .createHmac("sha256", API_KEY)
-        .update(JSON.stringify(payload))
+        .update(payload) // Use the raw stringified JSON
         .digest("base64");
+
+    console.log("Generated signature:", hash);
+    console.log("Received signature:", signature);
 
     if (hash !== signature) {
         console.error("Signature verification failed!", {
