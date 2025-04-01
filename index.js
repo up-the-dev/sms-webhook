@@ -78,7 +78,8 @@ app.delete("/flush-cache", (req, res) => {
     res.json({ message: "🧹 Cache flushed successfully!" });
 });
 
+const port = process.env.PORT || 5000;
 // Start Server
-app.listen(5000, "0.0.0.0", () => {
+app.listen(port, "0.0.0.0", () => {
     console.log(`🚀 Backend running at http://172.16.0.204:5000`);
 });
