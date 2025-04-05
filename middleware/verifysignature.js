@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const API_KEY = "6490e4be6cf88f9d0dc7d60a7169284908b07ca0";
+const API_KEY = "414e22fb7997771ee64d8c948267d10569ea342e";
 
 // Middleware for signature verification
 const verifySignatureMiddleware = (req, res, next) => {

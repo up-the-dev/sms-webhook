@@ -6,7 +6,7 @@ const crypto = require("crypto");
 const cacheHelper = require("./helpers/cacheHelper");
 
 const app = express();
-const API_KEY = "1e9be4c77b8d80c5b2d4936e5cffa7350887790c";
+const API_KEY = "414e22fb7997771ee64d8c948267d10569ea342e";
 
 app.use(
     cors({
