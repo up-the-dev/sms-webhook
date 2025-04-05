@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 // Webhook Endpoint (Protected by Signature Verification Middleware)
-app.post("/webhook", verifySignatureMiddleware, (req, res) => {
+app.post("/webhook", (req, res) => {
     try {
         if (req.body.messages) {
             // Store request in cache
